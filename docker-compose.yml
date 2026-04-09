@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  project-documentation:
+    build: .
+    container_name: project-documentation
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEBUG=false
+    volumes:
+      - ./data:/app/data
+    networks:
+      - project-documentation-network
+
+networks:
+  project-documentation-network:
+    driver: bridge

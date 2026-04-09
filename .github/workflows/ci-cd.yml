@@ -1,0 +1,49 @@
+name: Documentation Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Build documentation
+      run: |
+        echo "Building documentation..."
+        # 创建简单的HTML文档
+        if [ -f "README.md" ]; then
+          echo "<!DOCTYPE html>
+<html>
+<head>
+    <title>Documentation</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body { box-sizing: border-box; min-width: 200px; max-width: 980px; margin: 0 auto; padding: 45px; }
+        @media (max-width: 767px) { .markdown-body { padding: 15px; } }
+    </style>
+</head>
+<body class="markdown-body">
+" > docs/index.html
+          cat README.md | python3 -c "import sys; import markdown; print(markdown.markdown(sys.stdin.read()))" >> docs/index.html
+          echo "</body></html>" >> docs/index.html
+        fi
+    
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs
+        publish_branch: gh-pages

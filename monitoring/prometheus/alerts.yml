@@ -1,65 +1,62 @@
 groups:
   - name: project-documentation_alerts
     rules:
-      - alert: HighErrorRate
-        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
-        for: 2m
+      - alert: project-documentation_high_error_rate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
         labels:
           severity: critical
+          service: project-documentation
         annotations:
-          summary: "High error rate detected in project-documentation"
-          description: "Error rate is { $value }. More than 5% of requests are failing."
+          summary: "High error rate in project-documentation"
+          description: "Error rate is above 5% for the last 5 minutes"
       
-      - alert: HighLatency
+      - alert: project-documentation_high_latency
         expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
-        for: 2m
+        for: 5m
         labels:
           severity: warning
+          service: project-documentation
         annotations:
-          summary: "High latency detected in project-documentation"
-          description: "95th percentile latency is { $value } seconds."
+          summary: "High latency in project-documentation"
+          description: "95th percentile latency is above 1 second for the last 5 minutes"
       
-      - alert: ServiceDown
+      - alert: project-documentation_low_availability
         expr: up{job="project-documentation"} == 0
-        for: 1m
+        for: 2m
         labels:
           severity: critical
+          service: project-documentation
         annotations:
-          summary: "Service project-documentation is down"
-          description: "Service has been down for more than 1 minute."
+          summary: "project-documentation is down"
+          description: "Service has been down for more than 2 minutes"
       
-      - alert: HighMemoryUsage
-        expr: (container_memory_usage_bytes{container_label_com_docker_compose_service="project-documentation"} / container_spec_memory_limit_bytes{container_label_com_docker_compose_service="project-documentation"}) > 0.8
-        for: 2m
+      - alert: project-documentation_high_cpu_usage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
         labels:
           severity: warning
-        annotations:
-          summary: "High memory usage in project-documentation"
-          description: "Memory usage is { $value }% of limit."
-      
-      - alert: HighCPUUsage
-        expr: rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service="project-documentation"}[5m]) > 0.8
-        for: 2m
-        labels:
-          severity: warning
+          service: project-documentation
         annotations:
           summary: "High CPU usage in project-documentation"
-          description: "CPU usage is { $value } cores."
+          description: "CPU usage is above 80% for the last 5 minutes"
       
-      - alert: DiskSpaceLow
+      - alert: project-documentation_high_memory_usage
+        expr: process_resident_memory_bytes / (1024 * 1024) > 512
+        for: 5m
+        labels:
+          severity: warning
+          service: project-documentation
+        annotations:
+          summary: "High memory usage in project-documentation"
+          description: "Memory usage is above 512MB for the last 5 minutes"
+      
+      - alert: project-documentation_low_disk_space
         expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.2
         for: 5m
         labels:
           severity: warning
+          service: project-documentation
         annotations:
-          summary: "Low disk space"
-          description: "Disk space is less than 20% available."
-      
-      - alert: HighRequestRate
-        expr: rate(http_requests_total[5m]) > 1000
-        for: 2m
-        labels:
-          severity: info
-        annotations:
-          summary: "High request rate in project-documentation"
-          description: "Request rate is { $value } requests per second."
+          summary: "Low disk space for project-documentation"
+          description: "Disk space is below 20% for the last 5 minutes"
